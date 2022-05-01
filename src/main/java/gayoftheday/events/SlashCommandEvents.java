@@ -11,12 +11,18 @@ import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.concurrent.TimeUnit;
 
 
 public class SlashCommandEvents extends ListenerAdapter {
+
+    int delay = 0;
+    boolean replySent = false;
+
     @Override
     public void onSlashCommandInteraction(SlashCommandInteractionEvent event) {
 
+        delay = 0;
 
         //проверка на бота
         if (event.getUser().isBot()) {
@@ -71,7 +77,8 @@ public class SlashCommandEvents extends ListenerAdapter {
     private void getGayOfTheDay(@NotNull SlashCommandInteractionEvent event, Guild guild, Role gayRole) {
         if (event.getMember().getRoles().contains(gayRole)) {
             event.reply("Хорошая попытка, пидарюга").queue();
-            event.getChannel().sendMessage("Пидором дня все еще остается " + event.getUser().getAsMention()).queue();
+            replySent = true;
+            event.getChannel().sendMessage("Пидором дня все еще остается " + event.getUser().getAsMention()).queueAfter(++delay, TimeUnit.SECONDS);
             return;
         }
 
@@ -83,25 +90,33 @@ public class SlashCommandEvents extends ListenerAdapter {
                 currentGay = member;
                 System.out.println("deleting role from " + member.getUser().getAsTag());
                 guild.removeRoleFromMember(member, gayRole).queue();
-                event.reply(member.getAsMention() + " отсидел свой срок в клетке и возвращается к людям").queue();
+                event.reply(member.getAsMention() + " отсидел свой срок в клетке и возвращается к людям").queueAfter(++delay, TimeUnit.SECONDS);
+                replySent = true;
             }
         }
 
         Member newGay = getRandomGay(guild.getMembers());
         guild.addRoleToMember(newGay, gayRole).queue();
-        String reply = "Новым пидором дня становится " + newGay.getUser().getAsMention();
+
+        String reply = "";
+        if (event.getUser().equals(newGay.getUser())){
+            reply = "Ого, у нас каминг-аут. Новым пидором дня становится " + newGay.getUser().getAsMention();
+        } else {
+            reply = "Новым пидором дня становится " + newGay.getUser().getAsMention();
+        }
 
         if (currentGay != null) {
             if (newGay.getAsMention().equals(currentGay.getAsMention())) {
                 reply = newGay.getUser().getName() + " только расслабился, как опять угодил в петушатню. Что ж, от судьбы не убежишь, пидор дня все еще " + newGay.getAsMention();
             }
         }
-        event.getChannel().sendMessage(reply).queue();
+        if (!replySent){
+            event.reply("Итак, кто же займет вакантное место?").queueAfter(++delay, TimeUnit.SECONDS);
+        }
+        event.getChannel().sendMessage(reply).queueAfter(++delay, TimeUnit.SECONDS);
     }
 
     private Member getRandomGay(@NotNull List<Member> members) {
-
-        System.out.println("members size = " + members.size());
 
         List<Member> correctMembers = new ArrayList<>();
         for (Member member : members) {
@@ -110,7 +125,6 @@ public class SlashCommandEvents extends ListenerAdapter {
                 System.out.println(member.getUser().getName() + " added to potential gay list");
             }
         }
-        System.out.println("correct members size = " + correctMembers.size());
 
         int newRand = correctMembers.size();
         if (newRand > 0) {
@@ -119,14 +133,17 @@ public class SlashCommandEvents extends ListenerAdapter {
         } else {
             newRand = 0;
         }
+        System.out.println("Choosing random number in range 0.." + correctMembers.size() + ", newRand = " + newRand);
+
         Member newGay = correctMembers.get(newRand);
         return newGay;
     }
 
     private void getCurrentGay(@NotNull SlashCommandInteractionEvent event, Guild guild, Role gayRole) {
         if (event.getMember().getRoles().contains(gayRole)) {
-            event.reply("Постыдился бы. Сам знаешь, что ты и есть пидор дня").queue();
-            event.getChannel().sendMessage("Пидором дня все еще остается " + event.getUser().getAsMention()).queue();
+            event.reply("Постыдился бы. Сам знаешь, что ты и есть пидор дня").queueAfter(++delay, TimeUnit.SECONDS);
+            replySent = true;
+            event.getChannel().sendMessage("Пидором дня все еще остается " + event.getUser().getAsMention()).queueAfter(++delay, TimeUnit.SECONDS);
             return;
         }
 
@@ -135,8 +152,10 @@ public class SlashCommandEvents extends ListenerAdapter {
         System.out.println("gays on this server: " + members.size());
         if (members.size() > 0) {
             event.reply("В клетке сидит " + members.get(0).getAsMention()).queue();
+            replySent = true;
         } else if (members.size() == 0) {
             event.reply("Клетка пока пуста, непорядок :thinking:").queue();
+            replySent = true;
             event.getChannel().sendTyping().queue();
             getGayOfTheDay(event, guild, gayRole);
         }

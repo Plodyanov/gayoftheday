@@ -1,1 +1,1 @@
-web: java -jar C:\Programs\IntellijIDEA\JavaProjects\GayOfTheDay\out\artifacts\GayOfTheDay_jar\GayOfTheDay.jar
+worker: java -jar target/GayOfTheDay-1.0-SNAPSHOT-jar-with-dependencies.jar
