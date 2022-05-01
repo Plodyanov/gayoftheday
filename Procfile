@@ -1,0 +1,1 @@
+web: java -jar C:\Programs\IntellijIDEA\JavaProjects\GayOfTheDay\out\artifacts\GayOfTheDay_jar\GayOfTheDay.jar
