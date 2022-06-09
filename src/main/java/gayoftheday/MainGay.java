@@ -26,5 +26,6 @@ public class MainGay {
 
         bot.upsertCommand("gayoftheday", "Вычисляет пидора дня").queue();
         bot.upsertCommand("currentgay", "Показывает кто сейчас сидит в петушином углу").queue();
+        bot.upsertCommand("stat", "Показывает статистику").queue();
     }
 }

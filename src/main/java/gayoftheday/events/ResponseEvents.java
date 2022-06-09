@@ -1,6 +1,7 @@
 package gayoftheday.events;
 
 import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
@@ -44,12 +45,22 @@ public class ResponseEvents extends ListenerAdapter {
             return;
         }
 
+        if (event.getMessage().getContentRaw().contains("/check_users")) {
+            String users = "Список участников сервера:";
+            for (Member member : guild.getMembers()){
+                users += "\n\"user_name\": "+member.getUser().getName()+", {\"user_id\":\""+member.getUser().getId()
+                        +"\",\"server_id\":\""+guild.getId()
+                        +"\",\"duration\":0,\"times\":0,\"is_gay\":false}";
+            }
+            System.out.println(users);
+            event.getChannel().sendMessage(users).queue();
+        }
+
         //да? пизда. нет? пидора ответ
         String[] messageSent = event.getMessage().getContentRaw().split(" ");
         if (messageSent.length <= 3) {
             String lastWord = messageSent[messageSent.length - 1];
 
-            //TODO: заменить массивы на регулярки
             String[] noWord = {"нет", "неет", "нет!", "нет?", "ytn", "ytn!", "ytn&",};
             String[] yesWord = {"да", "да!", "да?", "lf", "lf!", "lf&"};
             for (String word : noWord) {
