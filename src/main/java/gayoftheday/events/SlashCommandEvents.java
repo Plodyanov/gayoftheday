@@ -108,7 +108,7 @@ public class SlashCommandEvents extends ListenerAdapter {
         guild.addRoleToMember(newGay, gayRole).queueAfter(++delay, TimeUnit.SECONDS);
 
         String reply = "";
-        if (event.getUser().equals(newGay.getUser())){
+        if (event.getUser().equals(newGay.getUser())) {
             reply = "Ого, у нас каминг-аут. Новым пидором дня становится " + newGay.getUser().getAsMention();
         } else {
             reply = "Новым пидором дня становится " + newGay.getUser().getAsMention();
@@ -120,7 +120,7 @@ public class SlashCommandEvents extends ListenerAdapter {
             }
         }
 
-        if (!replySent){
+        if (!replySent) {
             event.reply("Итак, кто же займет вакантное место?").queueAfter(++delay, TimeUnit.SECONDS);
         }
 
@@ -184,13 +184,13 @@ public class SlashCommandEvents extends ListenerAdapter {
 
         try {
             List<String> userIds = new ArrayList<>();
-            for (Member m : guild.getMembers()){
+            for (Member m : guild.getMembers()) {
                 userIds.add(m.getUser().getId());
             }
 
             ApiGayOfTheDay api = new ApiGayOfTheDay();
             ArrayList<ApiResponse> allUsersStats;
-            String statsToSend = "";
+
 
             try {
                 allUsersStats = api.getStatitstics(guild.getId());
@@ -199,24 +199,17 @@ public class SlashCommandEvents extends ListenerAdapter {
                 return;
             }
 
-            for (ApiResponse userStat : allUsersStats){
-                String currentUserStat = "";
-                System.out.println("user id = " + userStat.getUserId());
+            String statsToSend = "";
+            statsToSend = getAllStat(guild, allUsersStats);
+            String mostPopularGays ="";
+            mostPopularGays = getMostPopularGays(guild, allUsersStats);
+            String oldestGays = "";
+            oldestGays = getOldestGays(guild, allUsersStats);
 
-                String userName = "Анонимный пидарюга";
-                for (Member member : guild.getMembers()){
-                    if (member.getUser().getId().equals(userStat.getUserId())){
-                        userName = member.getUser().getName();
-                    }
-                }
-                currentUserStat += userName + " был";
-                if (userStat.isGay()){
-                    currentUserStat += " (и является)";
-                }
-                currentUserStat += " пидором дня " + userStat.getCounter() + " раз(а)";
-                currentUserStat += ", часов в качестве пидора дня: " + userStat.getDuration()/3600L + "\n";
-                statsToSend += currentUserStat;
-            }
+            event.getChannel().sendMessage("\n\nПоприветствуйте чемпионов").queueAfter(++delay, TimeUnit.SECONDS);
+            event.getChannel().sendMessage(mostPopularGays).queueAfter(++delay, TimeUnit.SECONDS);
+            event.getChannel().sendMessage(oldestGays).queueAfter(++delay, TimeUnit.SECONDS);
+            event.getChannel().sendMessage("\n\nНу и общая статистика").queueAfter(++delay, TimeUnit.SECONDS);
             event.getChannel().sendMessage(statsToSend).queueAfter(++delay, TimeUnit.SECONDS);
 
         } catch (IOException e) {
@@ -225,13 +218,121 @@ public class SlashCommandEvents extends ListenerAdapter {
 
     }
 
-    private void sendNewGayToRemote(@NotNull Guild guild, @NotNull User newGay){
+    private void sendNewGayToRemote(@NotNull Guild guild, @NotNull User newGay) {
         try {
             ApiGayOfTheDay api = new ApiGayOfTheDay();
-            System.out.println("sending "+newGay.getName()+" (id:"+newGay.getId()+") as new gay");
+            System.out.println("sending " + newGay.getName() + " (id:" + newGay.getId() + ") as new gay");
             api.sendGayToRemote(guild.getId(), newGay.getId());
         } catch (IOException e) {
             System.out.println("error while sending new gay to remote: " + e.getMessage());
         }
+    }
+
+    private String getAllStat(Guild guild, ArrayList<ApiResponse> allUsersStats) {
+        String statsToSend = "";
+        for (ApiResponse userStat : allUsersStats) {
+            String currentUserStat = "";
+            System.out.println("user id = " + userStat.getUserId());
+
+            String userName = "Анонимный пидарюга";
+            for (Member member : guild.getMembers()) {
+                if (member.getUser().getId().equals(userStat.getUserId())) {
+                    userName = member.getUser().getName();
+                }
+            }
+            currentUserStat += userName + " был";
+            if (userStat.isGay()) {
+                currentUserStat += " (и является)";
+            }
+            currentUserStat += " пидором дня " + userStat.getCounter() + " раз(а)";
+            currentUserStat += ", часов в качестве пидора дня: " + userStat.getDuration() / 3600L + "\n";
+            statsToSend += currentUserStat;
+        }
+        return statsToSend;
+    }
+
+    private String getMostPopularGays(Guild guild, ArrayList<ApiResponse> allUsersStats){
+        String mostPopularGays = "";
+        int counter = 0;
+        int gaysCounter = 0;
+
+        for (ApiResponse user : allUsersStats){
+            int userCounter = user.getCounter();
+
+            if (userCounter == counter){
+                gaysCounter++;
+            }
+            if (userCounter > counter) {
+                gaysCounter = 0;
+                counter = userCounter;
+                gaysCounter++;
+            }
+        }
+
+        if (gaysCounter == 1) {
+            mostPopularGays += "Самый популярный пидор на сервере:";
+        } else {
+            mostPopularGays += "Самые популярные пидоры на сервере:";
+        }
+
+        for (ApiResponse user : allUsersStats){
+            if (user.getCounter() == counter) {
+
+                String userName = "Анонимный пидор";
+                for (Member member : guild.getMembers()){
+                    if (member.getUser().getId().equals(user.getUserId())){
+                        userName = member.getUser().getName();
+                    }
+                }
+
+                String counts = ", был пидором дня " + user.getCounter() + " раз(а)";
+                mostPopularGays += "\n:rooster: " + userName + counts + " :rooster:";
+            }
+        }
+
+        return mostPopularGays;
+    }
+
+    private String getOldestGays(Guild guild, ArrayList<ApiResponse> allUsersStats) {
+        String oldestGays = "";
+        long duration = 0;
+        int gaysCounter = 0;
+
+        for (ApiResponse user : allUsersStats){
+            long userDuration = user.getDuration();
+
+            if (userDuration == duration){
+                gaysCounter++;
+            }
+
+            if (user.getCounter() > duration) {
+                gaysCounter = 0;
+                duration = userDuration;
+                gaysCounter++;
+            }
+        }
+
+        if (gaysCounter == 1) {
+            oldestGays += "Самый опытный пидор на сервере:";
+        } else {
+            oldestGays += "Самые опытные пидоры на сервере:";
+        }
+
+        for (ApiResponse user : allUsersStats){
+            if (user.getDuration() == duration) {
+
+                String userName = "Анонимный пидор";
+                for (Member member : guild.getMembers()){
+                    if (member.getUser().getId().equals(user.getUserId())){
+                        userName = member.getUser().getName();
+                    }
+                }
+
+                String hours = ", был пидором дня в течение " + (user.getDuration() / 3600L) + " часов";
+                oldestGays += "\n:rooster: " + userName + hours + " :rooster:";
+            }
+        }
+
+        return oldestGays;
     }
 }
