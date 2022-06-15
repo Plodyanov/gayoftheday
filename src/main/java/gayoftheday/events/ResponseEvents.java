@@ -58,33 +58,6 @@ public class ResponseEvents extends ListenerAdapter {
             event.getChannel().sendMessage(users).queue();
         }
 
-        if (event.getMessage().getContentRaw().equalsIgnoreCase("/embedBuilder_test")){
-
-            EmbedBuilder eb = new EmbedBuilder();
-
-            eb.setAuthor("/stat");
-            eb.setTitle("**Таблица пидрил**");
-            eb.setDescription("*Список лидеров и общая статистика*");
-            eb.setThumbnail("https://images.emojiterra.com/google/android-pie/512px/1f413.png");
-            eb.setColor(Color.PINK);
-            eb.setTimestamp(new Date().toInstant());
-
-            eb.addBlankField(false);
-            eb.addField("       :crown: Чемпионы сервера :crown:", "",false);
-            eb.addField("Самые популярные пидоры:","**Oxxxxy**: 5 раз\n**МучачоО**: 5 раз",true);
-            eb.addBlankField(true);
-            eb.addField("Самые опытные пидоры:","**Oxxxxy**: 120 часов\n**МучачоО**: 120 часов",true);
-
-            eb.addBlankField(false);
-            eb.addField("       :rainbow_flag: Общая статистика :rainbow_flag:", "", false);
-            eb.addField(new MessageEmbed.Field("Oxxxxy", "был пидором дня 5 раз(а), часов в качестве пидора дня: 120", false, true));
-            eb.addField(new MessageEmbed.Field("МучачоО", "был пидором дня 5 раз(а), часов в качестве пидора дня: 120", false, true));
-            eb.addField(new MessageEmbed.Field("ArdesT", "был пидором дня 4 раз(а), часов в качестве пидора дня: 96", false));
-            eb.addField(new MessageEmbed.Field("THE_PUNISHER38", "был пидором дня 4 раз(а), часов в качестве пидора дня: 96", false));
-            event.getChannel().sendMessageEmbeds(eb.build()).queue();
-
-        }
-
         //да? пизда. нет? пидора ответ
         String[] messageSent = event.getMessage().getContentRaw().split(" ");
         if (messageSent.length <= 3) {

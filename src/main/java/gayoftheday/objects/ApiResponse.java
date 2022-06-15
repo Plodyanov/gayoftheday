@@ -36,36 +36,71 @@ public class ApiResponse implements Comparable<ApiResponse> {
         response += "}";
         String[] values = response.split(",");
 
-        try {
-            this.userId = getValue(values[0]);
-            this.guildId = getValue(values[1]);
-            this.duration = Long.parseLong(getValue(values[2]));
-            this.counter = Integer.parseInt(getValue(values[3]));
-            this.isGay = getValue(values[4]).equals("true");
-        } catch (NumberFormatException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private String getValue(String rawValue){
-        rawValue += ",";
-        //System.out.println(rawValue);
-        Pattern[] patterns = {Pattern.compile("\":\"(.*?)\","), Pattern.compile("\":(.*?)}"), Pattern.compile("\":(.*?),"), };
-
-        String value = "";
-        for (Pattern pattern : patterns){
-            Matcher matcher = pattern.matcher(rawValue);
-
-            if (matcher.find()){
-                value = matcher.group(1);
-                return value;
+        for (String value : values) {
+            value += ",";
+            try {
+                if (value.contains("\"user_id\"")){
+                    String valueDecoded = "";
+                    Pattern pattern = Pattern.compile("\"user_id\":\"(\\d*)\"");
+                    Matcher matcher = pattern.matcher(value);
+                    if (matcher.find()){
+                        valueDecoded = matcher.group(1);
+                        this.userId = valueDecoded;
+                        continue;
+                    }
+                }
+                if (value.contains("\"server_id\"")){
+                    String valueDecoded = "";
+                    Pattern pattern = Pattern.compile("\"server_id\":\"(\\d*)\"");
+                    Matcher matcher = pattern.matcher(value);
+                    if (matcher.find()){
+                        valueDecoded = matcher.group(1);
+                        this.guildId = valueDecoded;
+                        continue;
+                    }
+                }
+                if (value.contains("\"duration\"")){
+                    String valueDecoded = "";
+                    Pattern pattern = Pattern.compile("\"duration\":(\\d*)");
+                    Matcher matcher = pattern.matcher(value);
+                    if (matcher.find()){
+                        valueDecoded = matcher.group(1);
+                        this.duration = Long.parseLong(valueDecoded);
+                        continue;
+                    }
+                }
+                if (value.contains("\"times\"")){
+                    String valueDecoded = "";
+                    Pattern pattern = Pattern.compile("\"times\":(\\d*)");
+                    Matcher matcher = pattern.matcher(value);
+                    if (matcher.find()){
+                        valueDecoded = matcher.group(1);
+                        this.counter = Integer.parseInt(valueDecoded);
+                        continue;
+                    }
+                }
+                if (value.contains("\"is_gay\"")){
+                    String valueDecoded = "";
+                    Pattern pattern = Pattern.compile("\"is_gay\":([a-zA-Z]*)");
+                    Matcher matcher = pattern.matcher(value);
+                    if (matcher.find()){
+                        valueDecoded = matcher.group(1);
+                        this.isGay = valueDecoded.equals("true");
+                        continue;
+                    }
+                }
+            } catch (Exception e) {
+                System.out.println("Error: " + e.getMessage());
             }
         }
-        return value;
     }
 
     @Override
     public int compareTo(@NotNull ApiResponse apiResponse) {
-        return apiResponse.counter - this.counter;
+        if (apiResponse.counter - this.counter == 0){
+            return (int) (apiResponse.duration - this.duration);
+        } else {
+            return apiResponse.counter - this.counter;
+        }
     }
 }

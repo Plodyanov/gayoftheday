@@ -235,8 +235,8 @@ public class SlashCommandEvents extends ListenerAdapter {
             if (userStat.isGay()) {
                 currentUserStat += " **(и является)**";
             }
-            currentUserStat += " пидором дня " + userStat.getCounter() + " раз(а)";
-            currentUserStat += ", часов в качестве пидора дня: " + userStat.getDuration() / 3600L + "\n";
+            currentUserStat += " пидором дня " + calculateCounter(userStat.getCounter());
+            currentUserStat += ", времени в качестве пидора дня: " + calculateTime(userStat.getDuration()) + "\n";
             allGaysList.add(new UserInfo(userName, currentUserStat));
         }
         return allGaysList;
@@ -262,7 +262,7 @@ public class SlashCommandEvents extends ListenerAdapter {
                         userName = member.getUser().getName();
                     }
                 }
-                String counts = user.getCounter() + " раз(а)";
+                String counts = calculateCounter(user.getCounter());
                 mostPopularList.add(new UserInfo(userName, counts));
             }
         }
@@ -290,7 +290,8 @@ public class SlashCommandEvents extends ListenerAdapter {
                         userName = member.getUser().getName();
                     }
                 }
-                String hours = (user.getDuration() / 3600L) + " часов";
+                String hours = calculateTime(user.getDuration());
+
                 oldestList.add(new UserInfo(userName, hours));
             }
         }
@@ -370,5 +371,96 @@ public class SlashCommandEvents extends ListenerAdapter {
             this.name = name;
             this.data = data;
         }
+    }
+
+    private String calculateTime(long seconds) {
+        String result = "";
+
+        int day = (int) TimeUnit.SECONDS.toDays(seconds);
+
+        //1 день, 2-4 дня, 5-0 дней, 10-20 дней
+        if (day % 100 >= 10 && day % 100 <= 20) {
+            result += day + " дней";
+        } else if (day != 0) {
+            switch (day % 10) {
+                case 1:
+                    result += day + " день";
+                    break;
+                case 2:
+                case 3:
+                case 4:
+                    result += day + " дня";
+                    break;
+                default:
+                    result += day + " дней";
+                    break;
+            }
+        }
+
+        int hours = (int) TimeUnit.SECONDS.toHours(seconds) - (day * 24);
+
+        //1 час, 2-4 часа, 5-0 часов, 10-20 часов
+        if (hours % 100 >= 10 && hours % 100 <= 20) {
+            result += " " + hours + " часов";
+        } else if (hours != 0) {
+            switch (hours % 10) {
+                case 1:
+                    result += " " + hours + " час";
+                    break;
+                case 2:
+                case 3:
+                case 4:
+                    result += " " + hours + " часа";
+                    break;
+                default:
+                    result += " " + hours + " часов";
+                    break;
+            }
+        }
+
+        int minute = (int) (TimeUnit.SECONDS.toMinutes(seconds) - (TimeUnit.SECONDS.toHours(seconds) * 60));
+
+        //1 минута, 2-4 минуты, 5-0 минут, 10-20 минут
+        if (minute % 100 >= 10 && minute % 100 <= 20) {
+            result += " " + minute + " минут";
+        } else if (minute != 0) {
+            switch (minute % 10) {
+                case 1:
+                    result += " " + minute + " минута";
+                    break;
+                case 2:
+                case 3:
+                case 4:
+                    result += " " + minute + " минуты";
+                    break;
+                default:
+                    result += " " + minute + " минут";
+                    break;
+            }
+        }
+        if (result.equals("")) {
+            result = " меньше минуты";
+        }
+        return result;
+    }
+
+    private String calculateCounter(int counter) {
+        String result = "";
+        //1 день, 2-4 дня, 5-0 дней, 10-20 дней
+        if (counter % 100 >= 10 && counter % 100 <= 20) {
+            result += counter + " раз";
+        } else {
+            switch (counter % 10) {
+                case 2:
+                case 3:
+                case 4:
+                    result += counter + " раза";
+                    break;
+                default:
+                    result += counter + " раз";
+                    break;
+            }
+        }
+        return result;
     }
 }
